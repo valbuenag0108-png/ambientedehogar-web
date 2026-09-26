@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ambiente de Hogar — Decoración para tu casa</title>
+<meta name="description" content="Catálogo de decoración para el hogar. Busca por nombre o entra a una categoría y arma tu pedido por WhatsApp.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="config-banner" id="configBanner" hidden>
+  Falta conectar tu proyecto de Firebase: edita <code>firebase-config.js</code> con tus datos reales (ver README.md).
+</div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <img class="brand-mark" src="images/logo.png" alt="Ambiente de Hogar" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '&lt;span class=&quot;brand-name&quot;&gt;Ambiente de Hogar&lt;/span&gt;')">
+    </div>
+    <button class="cart-toggle" id="cartToggle" aria-label="Abrir carrito">
+      <span class="cart-toggle-label">Pedido</span>
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</header>
+
+<section class="finder">
+  <h1>¿Qué estás buscando hoy?</h1>
+  <div class="search-box">
+    <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="15.5" y1="15.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <input type="text" id="searchInput" placeholder="Buscar por nombre, ej: florero, cojín, vela…" autocomplete="off">
+    <button type="button" id="searchClear" class="search-clear" hidden aria-label="Borrar búsqueda">✕</button>
+  </div>
+
+  <div class="cat-showcase" id="catShowcase">
+    <!-- tarjetas de categoría, generadas por JS -->
+  </div>
+</section>
+
+<nav class="cat-nav" id="catNav" aria-label="Categorías"></nav>
+
+<main id="catalog">
+  <p class="catalog-status" id="catalogStatus">Cargando catálogo…</p>
+</main>
+
+<div class="cart-drawer" id="cartDrawer" aria-hidden="true">
+  <div class="cart-drawer-head">
+    <h2>Tu pedido</h2>
+    <button class="cart-close" id="cartClose" aria-label="Cerrar carrito">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <p class="cart-empty" id="cartEmpty">Todavía no agregaste nada. Explora el catálogo y toca "Agregar" en lo que te guste.</p>
+  </div>
+  <div class="cart-footer">
+    <label for="customerName">Tu nombre</label>
+    <input type="text" id="customerName" placeholder="¿Cómo te llamas?">
+    <button class="cart-checkout" id="checkoutBtn">Pedir por WhatsApp</button>
+  </div>
+</div>
+<div class="cart-overlay" id="cartOverlay"></div>
+
+<footer class="site-footer">
+  <p>Ambiente de Hogar · Villa del Rosario, Zulia</p>
+  <p class="footer-note">Escríbenos también por Instagram <a href="https://instagram.com/ambientedehogar" target="_blank" rel="noopener">@ambientedehogar</a></p>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

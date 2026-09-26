@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel — Ambiente de Hogar</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="admin-body">
+
+<div class="admin-panel">
+  <header class="admin-topbar">
+    <img src="images/logo.png" alt="Ambiente de Hogar" class="admin-logo" onerror="this.style.display='none'">
+  </header>
+
+  <div class="admin-card" id="configWarning" hidden>
+    <h2>Falta conectar Firebase</h2>
+    <p class="admin-hint">Edita <code>firebase-config.js</code> con las credenciales reales de tu proyecto. La guía paso a paso está en README.md.</p>
+  </div>
+
+  <section class="admin-card" id="seedCard" hidden>
+    <h2>Empezar rápido</h2>
+    <p class="admin-hint">No tienes productos todavía. Puedes cargar un catálogo de ejemplo para ver cómo luce, y luego editarlo o borrarlo.</p>
+    <button class="admin-btn" id="seedBtn">Cargar catálogo de ejemplo</button>
+  </section>
+
+  <section class="admin-card">
+    <h2>Datos de la tienda</h2>
+    <form id="settingsForm" class="admin-form-inline">
+      <div>
+        <label for="storeWhatsapp">Número de WhatsApp (con código de país, sin +)</label>
+        <input type="text" id="storeWhatsapp" placeholder="584121234567">
+      </div>
+      <div>
+        <label for="storeName">Nombre de la tienda</label>
+        <input type="text" id="storeName" placeholder="Ambiente de Hogar">
+      </div>
+      <button type="submit" class="admin-btn">Guardar</button>
+    </form>
+  </section>
+
+  <section class="admin-card">
+    <h2>Categorías</h2>
+    <form id="categoryForm" class="admin-form-inline">
+      <div>
+        <label for="catName">Nombre</label>
+        <input type="text" id="catName" placeholder="Ej: Cojines y textiles" required>
+      </div>
+      <div>
+        <label for="catDesc">Descripción corta (opcional)</label>
+        <input type="text" id="catDesc" placeholder="Se muestra debajo del título">
+      </div>
+      <div class="admin-order-field">
+        <label for="catOrder">Orden</label>
+        <input type="number" id="catOrder" value="0">
+      </div>
+      <button type="submit" class="admin-btn">Agregar categoría</button>
+    </form>
+    <div class="admin-table-wrap">
+      <table class="admin-table" id="categoryTable">
+        <thead><tr><th>Orden</th><th>Nombre</th><th>Descripción</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="admin-card">
+    <h2>Productos</h2>
+    <form id="productForm" class="admin-form-inline">
+      <div>
+        <label for="prodName">Nombre</label>
+        <input type="text" id="prodName" required>
+      </div>
+      <div>
+        <label for="prodPrice">Precio</label>
+        <input type="number" id="prodPrice" step="0.01" required>
+      </div>
+      <div>
+        <label for="prodCurrency">Moneda</label>
+        <input type="text" id="prodCurrency" value="$" style="width:70px">
+      </div>
+      <div>
+        <label for="prodCategory">Categoría</label>
+        <select id="prodCategory" required></select>
+      </div>
+      <div class="admin-field-wide">
+        <label for="prodImage">Foto (URL, o "images/nombre.jpg" si la subiste al repositorio)</label>
+        <input type="text" id="prodImage" placeholder="images/cojin.jpg">
+      </div>
+      <input type="hidden" id="prodEditId">
+      <button type="submit" class="admin-btn" id="prodSubmitBtn">Agregar producto</button>
+      <button type="button" class="admin-btn admin-btn-ghost" id="prodCancelEdit" hidden>Cancelar edición</button>
+    </form>
+    <div class="admin-table-wrap">
+      <table class="admin-table" id="productTable">
+        <thead><tr><th>Foto</th><th>Nombre</th><th>Precio</th><th>Categoría</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script type="module" src="admin.js"></script>
+</body>
+</html>
