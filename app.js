@@ -1,4 +1,4 @@
-import { firebaseConfig } from "./firebase-config.js";
+var firebaseConfig = null;
 
 var categories = [];
 var products = [];
@@ -12,16 +12,24 @@ var gotProducts = false;
 /* ---------- Firebase: arrancar solo si hay credenciales reales ---------- */
 
 function isPlaceholderConfig() {
-  return !firebaseConfig.apiKey || firebaseConfig.apiKey.indexOf("TU_") === 0;
+  return !firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.indexOf("TU_") === 0;
 }
 
-if (isPlaceholderConfig()) {
+import("./firebase-config.js").then(function (mod) {
+  firebaseConfig = mod.firebaseConfig;
+  if (isPlaceholderConfig()) {
+    document.getElementById("configBanner").hidden = false;
+    document.getElementById("catalogStatus").textContent =
+      "El catálogo se activa en cuanto conectes tu proyecto de Firebase (ver el aviso de arriba).";
+    return;
+  }
+  initFirebase();
+}).catch(function (err) {
+  console.error(err);
   document.getElementById("configBanner").hidden = false;
   document.getElementById("catalogStatus").textContent =
-    "El catálogo se activa en cuanto conectes tu proyecto de Firebase (ver el aviso de arriba).";
-} else {
-  initFirebase();
-}
+    "No se pudo leer firebase-config.js. Revisa que solo tenga el bloque export const firebaseConfig = { ... };";
+});
 
 function initFirebase() {
   import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js").then(function (appMod) {
@@ -227,6 +235,14 @@ function buildCard(p) {
     img.src = p.image;
     img.alt = p.name;
     photo.appendChild(img);
+    photo.classList.add("zoomable");
+    photo.setAttribute("role", "button");
+    photo.setAttribute("tabindex", "0");
+    photo.setAttribute("aria-label", "Ampliar foto de " + p.name);
+    photo.addEventListener("click", function () { openLightbox(p); });
+    photo.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLightbox(p); }
+    });
   } else {
     photo.textContent = p.name;
   }
@@ -291,6 +307,30 @@ function clearSearch() {
   var input = document.getElementById("searchInput");
   if (input) input.value = "";
   renderCatalog();
+}
+
+/* ---------- Visor de imagen ampliada ---------- */
+
+function openLightbox(p) {
+  document.getElementById("lightboxImg").src = p.image;
+  document.getElementById("lightboxImg").alt = p.name;
+  document.getElementById("lightboxCaption").textContent = p.name + " — " + money(p);
+  document.getElementById("lightbox").hidden = false;
+}
+
+function closeLightbox() {
+  document.getElementById("lightbox").hidden = true;
+  document.getElementById("lightboxImg").src = "";
+}
+
+function setupLightbox() {
+  document.getElementById("lightboxClose").addEventListener("click", closeLightbox);
+  document.getElementById("lightbox").addEventListener("click", function (e) {
+    if (e.target.id === "lightbox") closeLightbox();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeLightbox();
+  });
 }
 
 /* ---------- Carrito: acciones ---------- */
@@ -443,4 +483,5 @@ document.addEventListener("DOMContentLoaded", function () {
   setupSearch();
   setupCartNav();
   setupActiveNav();
+  setupLightbox();
 });
