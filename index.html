@@ -18,9 +18,10 @@
 
 <header class="topbar">
   <div class="topbar-inner">
-    <div class="brand">
-      <img class="brand-mark" src="images/logo.png" alt="Ambiente de Hogar" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '&lt;span class=&quot;brand-name&quot;&gt;Ambiente de Hogar&lt;/span&gt;')">
-    </div>
+    <a class="brand" href="./">
+      <img class="brand-mark" src="images/logo-casa.png" alt="" onerror="this.style.display='none'">
+      <span class="brand-name">Ambiente <em>de Hogar</em></span>
+    </a>
     <button class="cart-toggle" id="cartToggle" aria-label="Abrir carrito">
       <span class="cart-toggle-label">Pedido</span>
       <span class="cart-count" id="cartCount">0</span>
@@ -70,6 +71,12 @@
   <p>Ambiente de Hogar · Villa del Rosario, Zulia</p>
   <p class="footer-note">Escríbenos también por Instagram <a href="https://instagram.com/ambientedehogar" target="_blank" rel="noopener">@ambientedehogar</a></p>
 </footer>
+
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar">✕</button>
+  <img id="lightboxImg" alt="">
+  <p class="lightbox-caption" id="lightboxCaption"></p>
+</div>
 
 <script type="module" src="app.js"></script>
 </body>
