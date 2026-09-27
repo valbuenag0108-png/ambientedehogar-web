@@ -246,6 +246,12 @@ function buildCard(p) {
   } else {
     photo.textContent = p.name;
   }
+  if (p.badge) {
+    var badge = document.createElement("span");
+    badge.className = "product-badge";
+    badge.textContent = p.badge;
+    photo.appendChild(badge);
+  }
   card.appendChild(photo);
 
   var body = document.createElement("div");
@@ -260,6 +266,13 @@ function buildCard(p) {
   price.className = "product-price";
   price.textContent = money(p);
   body.appendChild(price);
+
+  if (p.desc) {
+    var desc = document.createElement("p");
+    desc.className = "product-desc";
+    desc.textContent = p.desc;
+    body.appendChild(desc);
+  }
 
   var btn = document.createElement("button");
   btn.className = "product-add";
@@ -314,7 +327,9 @@ function clearSearch() {
 function openLightbox(p) {
   document.getElementById("lightboxImg").src = p.image;
   document.getElementById("lightboxImg").alt = p.name;
-  document.getElementById("lightboxCaption").textContent = p.name + " — " + money(p);
+  var caption = p.name + " — " + money(p);
+  if (p.desc) caption += "\n" + p.desc;
+  document.getElementById("lightboxCaption").textContent = caption;
   document.getElementById("lightbox").hidden = false;
 }
 
