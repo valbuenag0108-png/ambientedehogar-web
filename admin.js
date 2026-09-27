@@ -1,17 +1,75 @@
-import { firebaseConfig } from "./firebase-config.js";
+var firebaseConfig = null;
+window.__adminReady = true;
 
 var categories = [];
 var products = [];
 
 function isPlaceholderConfig() {
-  return !firebaseConfig.apiKey || firebaseConfig.apiKey.indexOf("TU_") === 0;
+  return !firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.indexOf("TU_") === 0;
 }
 
-if (isPlaceholderConfig()) {
-  document.getElementById("configWarning").hidden = false;
-} else {
-  initFirebase();
+function showStatus(msg, type) {
+  var el = document.getElementById("adminStatus");
+  el.textContent = msg;
+  el.className = "admin-status " + (type || "ok");
+  el.hidden = false;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (type !== "error") {
+    clearTimeout(showStatus._t);
+    showStatus._t = setTimeout(function () { el.hidden = true; }, 3000);
+  }
 }
+
+function explainError(err) {
+  var code = (err && err.code) || "";
+  var text = (err && err.message) || "";
+  console.error(err);
+  if (code === "permission-denied" || text.indexOf("permission") !== -1) {
+    return "No se guardó: Firebase rechazó el permiso. Ve a Firestore Database → Reglas, pega las reglas del README (allow read, write: if true;) y toca Publicar.";
+  }
+  if (code === "not-found" || text.indexOf("does not exist") !== -1 || text.indexOf("NOT_FOUND") !== -1) {
+    return "No se guardó: la base de datos Firestore no existe todavía. Ve a Firebase → Compilación → Firestore Database → Crear base de datos.";
+  }
+  if (code === "failed-precondition") {
+    return "No se guardó: Firestore no está listo. Revisa que la base de datos esté creada en Firebase → Firestore Database.";
+  }
+  if (code === "unavailable") {
+    return "No se guardó: no hay conexión con Firebase. Revisa tu internet e intenta de nuevo.";
+  }
+  if (text.indexOf("API key") !== -1 || code.indexOf("api-key") !== -1) {
+    return "No se guardó: la apiKey de firebase-config.js no es válida. Vuelve a copiarla desde Configuración del proyecto → Tus apps.";
+  }
+  return "No se guardó. Error de Firebase: " + (code || text || "desconocido");
+}
+
+var connected = false;
+
+// Evita que los formularios recarguen la página si Firebase no está conectado
+["settingsForm", "categoryForm", "productForm"].forEach(function (id) {
+  document.getElementById(id).addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!connected) {
+      showStatus("No se puede guardar todavía: el panel no está conectado a Firebase. Revisa que firebase-config.js tenga tus datos reales (no los TU_...).", "error");
+    }
+  });
+});
+
+import("./firebase-config.js").then(function (mod) {
+  firebaseConfig = mod.firebaseConfig;
+  if (!firebaseConfig) {
+    showStatus("firebase-config.js no tiene la línea 'export const firebaseConfig = {'. Asegúrate de que empiece exactamente así (con la palabra export).", "error");
+    return;
+  }
+  if (isPlaceholderConfig()) {
+    document.getElementById("configWarning").hidden = false;
+    showStatus("firebase-config.js todavía tiene los valores de ejemplo (TU_API_KEY...). Pega ahí tu configuración real de Firebase y vuelve a subirlo a GitHub.", "error");
+    return;
+  }
+  initFirebase();
+}).catch(function (err) {
+  console.error(err);
+  showStatus("firebase-config.js tiene un error y no se puede leer. Casi siempre es porque se pegaron líneas de 'import' o 'initializeApp' de Firebase. El archivo solo debe tener el bloque 'export const firebaseConfig = { ... };'.", "error");
+});
 
 function initFirebase() {
   Promise.all([
@@ -21,10 +79,11 @@ function initFirebase() {
     var appMod = mods[0], fsMod = mods[1];
     var app = appMod.initializeApp(firebaseConfig);
     var db = fsMod.getFirestore(app);
+    connected = true;
     start(fsMod, db);
   }).catch(function (err) {
     document.getElementById("configWarning").hidden = false;
-    console.error(err);
+    showStatus(explainError(err), "error");
   });
 }
 
@@ -37,13 +96,13 @@ function start(fsMod, db) {
     categories = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
     renderCategoryTable();
     renderCategorySelect();
-  });
+  }, function (err) { showStatus(explainError(err), "error"); });
 
   onSnapshot(collection(db, "products"), function (snap) {
     products = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
     renderProductTable();
     document.getElementById("seedCard").hidden = products.length > 0;
-  });
+  }, function (err) { showStatus(explainError(err), "error"); });
 
   getDoc(doc(db, "settings", "store")).then(function (snap) {
     if (snap.exists()) {
@@ -58,7 +117,9 @@ function start(fsMod, db) {
     setDoc(doc(db, "settings", "store"), {
       whatsapp: document.getElementById("storeWhatsapp").value.trim(),
       storeName: document.getElementById("storeName").value.trim()
-    }, { merge: true });
+    }, { merge: true })
+      .then(function () { showStatus("Datos de la tienda guardados ✓"); })
+      .catch(function (err) { showStatus(explainError(err), "error"); });
   });
 
   document.getElementById("categoryForm").addEventListener("submit", function (e) {
@@ -67,7 +128,10 @@ function start(fsMod, db) {
       name: document.getElementById("catName").value.trim(),
       desc: document.getElementById("catDesc").value.trim(),
       order: Number(document.getElementById("catOrder").value) || 0
-    }).then(function () { e.target.reset(); });
+    }).then(function () {
+      e.target.reset();
+      showStatus("Categoría guardada ✓");
+    }).catch(function (err) { showStatus(explainError(err), "error"); });
   });
 
   function renderCategoryTable() {
@@ -99,7 +163,9 @@ function start(fsMod, db) {
           return;
         }
         if (confirm("¿Eliminar la categoría \"" + cat.name + "\"?")) {
-          deleteDoc(doc(db, "categories", cat.id));
+          deleteDoc(doc(db, "categories", cat.id))
+            .then(function () { showStatus("Categoría eliminada"); })
+            .catch(function (err) { showStatus(explainError(err), "error"); });
         }
       });
       tdActions.appendChild(delBtn);
@@ -137,11 +203,16 @@ function start(fsMod, db) {
       price: Number(document.getElementById("prodPrice").value) || 0,
       currency: document.getElementById("prodCurrency").value.trim() || "$",
       categoryId: document.getElementById("prodCategory").value,
-      image: document.getElementById("prodImage").value.trim()
+      image: document.getElementById("prodImage").value.trim(),
+      desc: document.getElementById("prodDesc").value.trim(),
+      badge: document.getElementById("prodBadge").value.trim()
     };
     var editId = document.getElementById("prodEditId").value;
     var task = editId ? updateDoc(doc(db, "products", editId), data) : addDoc(collection(db, "products"), data);
-    task.then(resetProductForm);
+    task.then(function () {
+      resetProductForm();
+      showStatus(editId ? "Producto actualizado ✓" : "Producto guardado ✓");
+    }).catch(function (err) { showStatus(explainError(err), "error"); });
   });
 
   prodCancelEdit.addEventListener("click", resetProductForm);
@@ -161,6 +232,8 @@ function start(fsMod, db) {
     document.getElementById("prodCurrency").value = p.currency || "$";
     document.getElementById("prodCategory").value = p.categoryId;
     document.getElementById("prodImage").value = p.image || "";
+    document.getElementById("prodDesc").value = p.desc || "";
+    document.getElementById("prodBadge").value = p.badge || "";
     prodSubmitBtn.textContent = "Guardar cambios";
     prodCancelEdit.hidden = false;
     window.scrollTo({ top: productForm.offsetTop - 20, behavior: "smooth" });
@@ -207,7 +280,11 @@ function start(fsMod, db) {
       delBtn.className = "admin-btn admin-btn-danger admin-btn-sm";
       delBtn.textContent = "Eliminar";
       delBtn.addEventListener("click", function () {
-        if (confirm("¿Eliminar \"" + p.name + "\"?")) deleteDoc(doc(db, "products", p.id));
+        if (confirm("¿Eliminar \"" + p.name + "\"?")) {
+          deleteDoc(doc(db, "products", p.id))
+            .then(function () { showStatus("Producto eliminado"); })
+            .catch(function (err) { showStatus(explainError(err), "error"); });
+        }
       });
 
       tdActions.appendChild(editBtn);
@@ -252,7 +329,7 @@ function start(fsMod, db) {
         });
       }));
     }).then(function () {
-      alert("Listo, catálogo de ejemplo cargado. Ya puedes editarlo.");
-    });
+      showStatus("Catálogo de ejemplo cargado ✓ Ya puedes editarlo.");
+    }).catch(function (err) { showStatus(explainError(err), "error"); });
   });
 }
