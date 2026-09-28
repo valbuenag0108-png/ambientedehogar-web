@@ -81,6 +81,27 @@ function saveCart() {
   try { localStorage.setItem("adh_cart", JSON.stringify(cart)); } catch (e) {}
 }
 
+/* ---------- Fotos: versiones livianas para que la página cargue rápido ---------- */
+
+function optimizedUrl(url, width) {
+  if (!url || !/^https?:\/\//i.test(url)) return url; // fotos propias (images/...) se dejan igual
+  if (url.indexOf("images.weserv.nl") !== -1) return url;
+  return "https://images.weserv.nl/?url=" + encodeURIComponent(url.replace(/^https?:\/\//i, "")) +
+    "&w=" + width + "&we&q=78&output=webp";
+}
+
+function makeImg(url, width, alt) {
+  var img = document.createElement("img");
+  img.src = optimizedUrl(url, width);
+  img.alt = alt || "";
+  img.loading = "lazy";
+  img.decoding = "async";
+  img.addEventListener("error", function () {
+    if (img.src !== url) img.src = url; // si el redimensionador falla, usa la foto original
+  }, { once: true });
+  return img;
+}
+
 /* ---------- Utilidades ---------- */
 
 function money(p) { return (p.currency || "$") + p.price; }
@@ -115,10 +136,7 @@ function renderCatShowcase() {
     var photo = document.createElement("div");
     photo.className = "cat-card-photo";
     if (withPhoto) {
-      var img = document.createElement("img");
-      img.src = withPhoto.image;
-      img.alt = "";
-      photo.appendChild(img);
+      photo.appendChild(makeImg(withPhoto.image, 320, ""));
     } else {
       photo.textContent = cat.name.charAt(0);
     }
@@ -231,10 +249,7 @@ function buildCard(p) {
   var photo = document.createElement("div");
   photo.className = "product-photo";
   if (p.image) {
-    var img = document.createElement("img");
-    img.src = p.image;
-    img.alt = p.name;
-    photo.appendChild(img);
+    photo.appendChild(makeImg(p.image, 520, p.name));
     photo.classList.add("zoomable");
     photo.setAttribute("role", "button");
     photo.setAttribute("tabindex", "0");
@@ -325,7 +340,9 @@ function clearSearch() {
 /* ---------- Visor de imagen ampliada ---------- */
 
 function openLightbox(p) {
-  document.getElementById("lightboxImg").src = p.image;
+  var big = document.getElementById("lightboxImg");
+  big.onerror = function () { big.onerror = null; big.src = p.image; };
+  big.src = optimizedUrl(p.image, 1100);
   document.getElementById("lightboxImg").alt = p.name;
   var caption = p.name + " — " + money(p);
   if (p.desc) caption += "\n" + p.desc;
